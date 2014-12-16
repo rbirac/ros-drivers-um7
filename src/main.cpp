@@ -130,9 +130,9 @@ void configureSensor(um7::Comms* sensor) {
   // Options available using parameters) 
   uint32_t misc_config_reg = 0;  //initialize all options off
 
-  // Optionally enable mag updates in the sensor's EKF.
+  // Optionally disable mag updates in the sensor's EKF.
   bool mag_updates; 
-  ros::param::param<bool>("~mag_updates", mag_updates, false);
+  ros::param::param<bool>("~mag_updates", mag_updates, true);
   if (mag_updates) {
     misc_config_reg |= MAG_UPDATES_ENABLED;
   } else {
