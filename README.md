@@ -1,4 +1,5 @@
 ros-drivers-um7
 ===============
 
-ROS driver for CH Robotics UM7 inertial measurement device. 
+Supports standard data and mag topics as well as providing temperature and rpy outputs.
+  See the ROS wiki for details:  (soon to come)
