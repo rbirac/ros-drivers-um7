@@ -6,6 +6,8 @@
  *              topics, etc.
  *  \author     Mike Purvis <mpurvis@clearpathrobotics.com>
  *  \copyright  Copyright (c) 2013, Clearpath Robotics, Inc.
+ *  \author     Alex Brown <rbirac@cox.net>
+ *  \copyright  Copyright (c) 2015, Alex Brown.
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -29,7 +31,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  * 
- * Please send comments, questions, or patches to code@clearpathrobotics.com 
+ * Please send comments, questions, or patches to Alex Brown  rbirac@cox.net
  *
  */
 #include <string>
@@ -220,6 +222,7 @@ void publishMsgs(um7::Registers& r, ros::NodeHandle* n, const std_msgs::Header& 
     mag_msg.vector.y = r.mag.get_scaled(0);
     mag_msg.vector.z = -r.mag.get_scaled(2);
     mag_pub.publish(mag_msg);
+printf("xyz %f %f %f\n",mag_msg.vector.x, mag_msg.vector.y, mag_msg.vector.z);
   }
 
   if (rpy_pub.getNumSubscribers() > 0) {

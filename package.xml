@@ -6,8 +6,9 @@
     corresponding ROS node for publishing standard ROS orientation topics from a UM7.
   </description>
 
-  <maintainer email="mpurvis@clearpathrobotics.com">Mike Purvis</maintainer>
+  <maintainer email="rbirac@cox.net">Alex Brown</maintainer>
   <author email="mpurvis@clearpathrobotics.com">Mike Purvis</author>
+  <author email="rbirac@cox.net">Alex Brown</author>
   
   <license>BSD</license>
 

@@ -4,8 +4,10 @@
  *  \brief      Provides the Registers class, which initializes with a suite
  *              of accessors suitable for reading and writing the UM7 registers,
  *              including byte-order conversion and scaling handled.
- *  \author     Mike Purvis <mpurvis@clearpathrobotics.com>
+ *  \author     Mike Purvis <mpurvis@clearpathrobotics.com> wrote original code for UM6
  *  \copyright  Copyright (c) 2013, Clearpath Robotics, Inc.
+ *  \author     Alex Brown <rbirac@cox.net>                 adapted code for UM7
+ *  \copyright  Copyright (c) 2015, Alex Brown
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -29,12 +31,18 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  * 
- * Please send comments, questions, or patches to code@clearpathrobotics.com 
+ * Please send comments, questions, or patches to Alex Brown  rbirac@cox.net
  *
  */
 
 #ifndef INCLUDE_UM7_REGISTERS_H_
 #define INCLUDE_UM7_REGISTERS_H_
+
+#if __APPLE__
+#include <machine/endian.h>
+#else
+#include <endian.h>
+#endif
 
 #include <endian.h>
 #include <math.h>
@@ -148,7 +156,7 @@ class Registers {
       accel_raw(this, DREG_ACCEL_RAW_XY, 3),
       mag_raw(this, DREG_MAG_RAW_XY, 3),
       gyro(this, DREG_GYRO_PROC_X, 3, 1.0 * TO_RADIANS),
-      accel(this, DREG_ACCEL_PROC_X, 3, 1.0),             
+      accel(this, DREG_ACCEL_PROC_X, 3, 9.80665),              
       mag(this, DREG_MAG_PROC_X, 3,1.0),
       euler(this, DREG_EULER_PHI_THETA, 3, 0.0109863 * TO_RADIANS),
       quat(this, DREG_QUAT_AB, 4, 0.0000335693),

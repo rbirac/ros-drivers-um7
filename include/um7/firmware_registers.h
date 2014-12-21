@@ -1,10 +1,11 @@
  /**  
  *  \file
- *  \brief   Copied directly from the UM6_config.h file, available online here:
-             Note: while this is named "UM6_config.h", it is not the same as the file used for the
-             UM6 and is part of the UM7 source code.
+ *  \brief   Copied directly from the UM7 version of the UM6_config.h file, available online here:
  *           http://sourceforge.net/p/um6firmware/code/34/tree/trunk/UM6%20Firmware/UM6_config.h#l14
- *  \author  CH Robotics    
+ *           Note: while while the source of this code is named "UM6_config.h", it is not the same
+ *           as the file used for the UM6 and is part of the UM7 source code.
+ *  \author  Alex Brown  rbirac@cox.net
+ *  \maintainer  Alex Brown  rbirac@cox.net    
  */
 
 
