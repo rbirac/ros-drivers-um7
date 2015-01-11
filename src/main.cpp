@@ -23,8 +23,8 @@
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
  * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL CLEARPATH ROBOTICS, INC. BE LIABLE FOR ANY
- * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ * DISCLAIMED. IN NO EVENT SHALL CLEARPATH ROBOTICS, INC. OR ALEX BROWN BE LIABLE 
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
  * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
  * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
  * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
@@ -34,7 +34,6 @@
  * Please send comments, questions, or patches to Alex Brown  rbirac@cox.net
  *
  */
-#include <string>
 
 #include "geometry_msgs/Vector3Stamped.h"
 #include "ros/ros.h"
@@ -46,6 +45,8 @@
 #include "um7/registers.h"
 #include "um7/Reset.h"
 
+float covar[9];     // orientation covariance values
+const char VERSION[10] = "0.0.0";   //um7_driver version
 
 // Don't try to be too clever. Arrival of this message triggers
 // us to publish everything we have.
@@ -110,7 +111,7 @@ void configureSensor(um7::Comms* sensor) {
       throw std::runtime_error("Unable to set CREG_COM_RATES2.");
     }
 
-    uint32_t proc_rate = (10<<RATE4_ALL_PROC_START);  
+    uint32_t proc_rate = (20<<RATE4_ALL_PROC_START);  
     r.comrate4.set(0, proc_rate);
     if (!sensor->sendWaitAck(r.comrate4)) {
       throw std::runtime_error("Unable to set CREG_COM_RATES4.");
@@ -143,7 +144,7 @@ void configureSensor(um7::Comms* sensor) {
 
   // Optionally enable quaternion mode .
   bool quat_mode;
-  ros::param::param<bool>("~quat_mode", quat_mode, false);
+  ros::param::param<bool>("~quat_mode", quat_mode, true);
   if (quat_mode) {
     misc_config_reg |= QUATERNION_MODE_ENABLED;
   } else {
@@ -185,55 +186,57 @@ void publishMsgs(um7::Registers& r, ros::NodeHandle* n, const std_msgs::Header& 
     sensor_msgs::Imu imu_msg;
     imu_msg.header = header;
 
-    // IMU outputs [w,x,y,z] NED, convert to [x,y,z,w] ENU
-    imu_msg.orientation.x = r.quat.get_scaled(2);
-    imu_msg.orientation.y = r.quat.get_scaled(1);
+    // IMU outputs [w,x,y,z], convert to [x,y,z,w] & transform to ROS axes
+    imu_msg.orientation.x =  r.quat.get_scaled(1);
+    imu_msg.orientation.y = -r.quat.get_scaled(2);
     imu_msg.orientation.z = -r.quat.get_scaled(3);
     imu_msg.orientation.w = r.quat.get_scaled(0);
 
-    // IMU does not report covariance
-    imu_msg.orientation_covariance[0] = 0;
-    imu_msg.orientation_covariance[1] = 0;
-    imu_msg.orientation_covariance[2] = 0;
-    imu_msg.orientation_covariance[3] = 0;
-    imu_msg.orientation_covariance[4] = 0; 
-    imu_msg.orientation_covariance[5] = 0; 
-    imu_msg.orientation_covariance[6] = 0; 
-    imu_msg.orientation_covariance[7] = 0; 
-    imu_msg.orientation_covariance[8] = 0; 
+    // Covariance of attitude.  set to constant default or parameter values
+    imu_msg.orientation_covariance[0] = covar[0];
+    imu_msg.orientation_covariance[1] = covar[1];
+    imu_msg.orientation_covariance[2] = covar[2];
+    imu_msg.orientation_covariance[3] = covar[3];
+    imu_msg.orientation_covariance[4] = covar[4]; 
+    imu_msg.orientation_covariance[5] = covar[5]; 
+    imu_msg.orientation_covariance[6] = covar[6]; 
+    imu_msg.orientation_covariance[7] = covar[7]; 
+    imu_msg.orientation_covariance[8] = covar[8]; 
 
-    // NED -> ENU conversion.
-    imu_msg.angular_velocity.x = r.gyro.get_scaled(1);
-    imu_msg.angular_velocity.y = r.gyro.get_scaled(0);
+    // Angular velocity.  transform to ROS axes
+    imu_msg.angular_velocity.x =  r.gyro.get_scaled(0);
+    imu_msg.angular_velocity.y = -r.gyro.get_scaled(1);
     imu_msg.angular_velocity.z = -r.gyro.get_scaled(2);
 
-    // NED -> ENU conversion.
-    imu_msg.linear_acceleration.x = r.accel.get_scaled(1);
-    imu_msg.linear_acceleration.y = r.accel.get_scaled(0);
+    // Linear accel.  transform to ROS axes
+    imu_msg.linear_acceleration.x =  r.accel.get_scaled(0);
+    imu_msg.linear_acceleration.y = -r.accel.get_scaled(1);
     imu_msg.linear_acceleration.z = -r.accel.get_scaled(2);
 
     imu_pub.publish(imu_msg);
   }
 
+  // Magnetometer.  transform to ROS axes
   if (mag_pub.getNumSubscribers() > 0) {
     geometry_msgs::Vector3Stamped mag_msg;
     mag_msg.header = header;
-    mag_msg.vector.x = r.mag.get_scaled(1);
-    mag_msg.vector.y = r.mag.get_scaled(0);
+    mag_msg.vector.x =  r.mag.get_scaled(0);
+    mag_msg.vector.y = -r.mag.get_scaled(1);
     mag_msg.vector.z = -r.mag.get_scaled(2);
     mag_pub.publish(mag_msg);
-printf("xyz %f %f %f\n",mag_msg.vector.x, mag_msg.vector.y, mag_msg.vector.z);
   }
 
+  // Euler attitudes.  transform to ROS axes
   if (rpy_pub.getNumSubscribers() > 0) {
     geometry_msgs::Vector3Stamped rpy_msg;
     rpy_msg.header = header;
-    rpy_msg.vector.x = r.euler.get_scaled(1);
-    rpy_msg.vector.y = r.euler.get_scaled(0);
+    rpy_msg.vector.x =  r.euler.get_scaled(0);
+    rpy_msg.vector.y = -r.euler.get_scaled(1);
     rpy_msg.vector.z = -r.euler.get_scaled(2);
     rpy_pub.publish(rpy_msg);
   }
 
+  // Temperature
   if (temp_pub.getNumSubscribers() > 0) {
     std_msgs::Float32 temp_msg;
     temp_msg.data = r.temperature.get_scaled(0);
@@ -261,18 +264,38 @@ int main(int argc, char **argv) {
   ser.setTimeout(to);
 
   ros::NodeHandle n;
+
   std_msgs::Header header;
   ros::param::param<std::string>("~frame_id", header.frame_id, "imu_link");
 
+  // Initialize covariance. The UM7 sensor does not provide covariance values so,
+  //   by default, this driver provides a covariance array of all zeros indicating
+  //   "covariance unknown" as advised in sensor_msgs/Imu.h.
+  // This param allows the user to specify alternate covariance values if needed.  
+
+  std::string covariance;
+  char cov[200];
+  ros::param::param<std::string>("~covariance",covariance,"0 0 0 0 0 0 0 0 0"); 
+  strcpy(cov,covariance.substr(0,198).c_str());  // substr ensures no overrun of cov
+
+  char* p = strtok(cov, " ");           // point to first value
+  for(int iter = 0; iter<9; iter++)
+  {
+    if(p) covar[iter] = atof(p);        // covar[] is global var
+    else  covar[iter] = 0.0;
+    p = strtok(NULL, " ");              // point to next value (nil if none)
+  } 
+
+  // Real Time Loop
   bool first_failure = true;
   while (ros::ok()) {
     try {
       ser.open();
     } catch(const serial::IOException& e) {
-      ROS_DEBUG("Unable to connect to port.");
+        ROS_DEBUG("um7_driver ver %s unable to connect to port.",VERSION);
     }
     if (ser.isOpen()) {
-      ROS_INFO("Successfully connected to serial port.");
+      ROS_INFO("um7_driver ver %s connected to serial port.",VERSION);
       first_failure = true;
       try {
         um7::Comms sensor(&ser);

@@ -57,8 +57,4 @@ add_custom_target(${PROJECT_NAME}_cpplint
 ## Testing ##
 #############
 
-catkin_add_gtest(${PROJECT_NAME}_test_registers test/test_registers.cpp src/registers.cpp)
-catkin_add_gtest(${PROJECT_NAME}_test_comms test/test_comms.cpp src/comms.cpp src/registers.cpp)
-if(TARGET ${PROJECT_NAME}_test_comms)
-  target_link_libraries(${PROJECT_NAME}_test_comms util ${catkin_LIBRARIES})
-endif()
+
