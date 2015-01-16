@@ -4,9 +4,9 @@
  *  \brief      Main entry point for UM7 driver. Handles serial connection
  *              details, as well as all ROS message stuffing, parameters,
  *              topics, etc.
- *  \author     Mike Purvis <mpurvis@clearpathrobotics.com>
+ *  \author     Mike Purvis <mpurvis@clearpathrobotics.com> (original code for UM6)
  *  \copyright  Copyright (c) 2013, Clearpath Robotics, Inc.
- *  \author     Alex Brown <rbirac@cox.net>
+ *  \author     Alex Brown <rbirac@cox.net>		    (adapted to UM7)
  *  \copyright  Copyright (c) 2015, Alex Brown.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -38,7 +38,7 @@
 #include "geometry_msgs/Vector3Stamped.h"
 #include "ros/ros.h"
 #include "sensor_msgs/Imu.h"
-#include "serial/serial.h"
+#include "serial/serial.h"    		// must install serial library from apt-get
 #include "std_msgs/Float32.h"
 #include "std_msgs/Header.h"
 #include "um7/comms.h"
@@ -46,7 +46,7 @@
 #include "um7/Reset.h"
 
 float covar[9];     // orientation covariance values
-const char VERSION[10] = "0.0.0";   //um7_driver version
+const char VERSION[10] = "0.1.0";   //um7_driver version
 
 // Don't try to be too clever. Arrival of this message triggers
 // us to publish everything we have.
